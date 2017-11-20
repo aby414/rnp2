@@ -28,4 +28,12 @@ public class Room extends Thread{
 
     }
 
+    public String clientsToString() {
+        StringBuilder sb = new StringBuilder();
+        for (Client c : clients) {
+            sb.append(c.getName() + "\n");
+        }
+        return sb.toString();
+    }
+
 }
