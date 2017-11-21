@@ -15,6 +15,7 @@ public class Client extends Thread {
     private Socket socket;
     private BufferedReader in;
     private DataOutputStream out;
+    private boolean quit = false;
 
     public Client(Socket socket) {
         this.socket = socket;
@@ -29,42 +30,50 @@ public class Client extends Thread {
             registerUser();
             chooseLobbyCommands();
             sendMessage();
-
+            Server.removeClient(this);
 
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                in.close();
+                out.close();
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     private void registerUser() throws IOException {
         //Send hello message to Client
-        while (true) {
             out.writeBytes("SELECTNAME \n");
-            while (true) {
+            while (!quit) {
                 String name = in.readLine();
                 if (name == null) {
                     return;
+                }
+                if(name.toUpperCase().equals("QUIT")){
+                    quit = true;
                 }
                 synchronized (Server.getNames()) {
                     if (!Server.getNames().contains(name)) {
                         Server.getNames().add(name);
                         this.setName(name);
+                        out.writeBytes("ACCEPTED \n");
                         break;
                     } else {
-                        out.writeBytes("INVALID");
-                        out.writeBytes("SELECTNAME");
+                        out.writeBytes("INVALID \n");
+                        out.writeBytes("SELECTNAME \n");
                     }
                 }
-            }
-            break;
-        }
 
-        out.writeBytes("ACCEPTED \n");
-        Server.getOutputStreams().add(out);
+            }
+
     }
 
     private void chooseLobbyCommands() throws IOException {
-        while (true) {
+        while (!quit) {
             String input = in.readLine();
 
             if (input == null) {
@@ -86,16 +95,19 @@ public class Client extends Thread {
                 } else {
                     out.writeBytes("INVALID_ROOMNAME \n");
                 }
-            }else if(input.equals("HELP")){
+            } else if (input.equals("HELP")) {
                 out.writeBytes("ROOMS \n");
                 out.writeBytes("USERS: <ROOMNAME>");
-            }else if(joinRoomMatcher.find()){
+            } else if (joinRoomMatcher.find()) {
                 Room r = findRoomByName(joinRoomMatcher.group(1));
                 this.room = r;
                 r.addClient(this);
                 out.writeBytes("JOIN_SUCCESSFUL \n");
                 room.outputStreams.add(out);
+                room.sendClientJoinedNotification(this);
                 break;
+            } else if(input.equals("QUIT")){
+                quit = true;
             }else {
                 out.writeBytes("UNKNOWN_COMMAND \n");
             }
@@ -103,13 +115,27 @@ public class Client extends Thread {
     }
 
     private void sendMessage() throws IOException {
-        String input = in.readLine();
+        while (!quit) {
+            String input = in.readLine();
 
-        if (input == null) {
-            return;
+            if (input == null) {
+                return;
+            }
+            input = input.toUpperCase();
+
+            Pattern messagePattern = Pattern.compile("MESSAGE: (.*)");
+            Matcher messageMatcher = messagePattern.matcher(input);
+            if (messageMatcher.find()) {
+                Server.sendMessageToRoom(this, room, messageMatcher.group(1));
+            }else if(input.equals("QUIT")){
+                quit = true;
+            } else {
+                out.writeBytes("INVALID_MESSAGE_FORMAT \n");
+            }
+
+
         }
-
-
+        out.writeBytes("BYE BYE \n");
     }
 
     public String roomsToString() {
@@ -128,5 +154,13 @@ public class Client extends Thread {
             }
         }
         return null;
+    }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public DataOutputStream getOut() {
+        return out;
     }
 }

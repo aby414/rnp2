@@ -5,12 +5,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Room extends Thread {
 
     Server server;
     List<Client> clients = new ArrayList<>();
-    HashSet<DataOutputStream> outputStreams = new HashSet<>();
+    Set<DataOutputStream> outputStreams = new HashSet<>();
 
     public Room(String name, Server server) {
         super(name);
@@ -29,7 +30,31 @@ public class Room extends Thread {
         try {
             for (DataOutputStream out : outputStreams) {
 
-                out.writeBytes(client.getName() + ": " + message);
+                out.writeBytes(client.getName() + ": " + message + "\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendClientGoneMessage(Client client){
+        try {
+            for (DataOutputStream out : outputStreams) {
+                if(!out.equals(client.getOut())) {
+                    out.writeBytes(client.getName() + " hat den Raum verlassen \n");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendClientJoinedNotification(Client client){
+        try {
+            for (DataOutputStream out : outputStreams) {
+                if(!out.equals(client.getOut())) {
+                    out.writeBytes(client.getName() + " hat den Raum betreten \n");
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -44,5 +69,10 @@ public class Room extends Thread {
         }
         return sb.toString();
     }
+
+    public Set<DataOutputStream> getOutputStreams() {
+        return outputStreams;
+    }
+
 
 }
