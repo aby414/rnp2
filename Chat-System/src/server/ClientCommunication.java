@@ -1,15 +1,14 @@
 package server;
 
-import com.sun.org.apache.xerces.internal.impl.xpath.regex.Match;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.Arrays;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Client extends Thread {
+public class ClientCommunication extends Thread {
 
     private Room room;
     private Socket socket;
@@ -17,7 +16,7 @@ public class Client extends Thread {
     private DataOutputStream out;
     private boolean quit = false;
 
-    public Client(Socket socket) {
+    public ClientCommunication(Socket socket) {
         this.socket = socket;
     }
 
@@ -46,29 +45,30 @@ public class Client extends Thread {
     }
 
     private void registerUser() throws IOException {
-        //Send hello message to Client
-            out.writeBytes("SELECTNAME \n");
-            while (!quit) {
-                String name = in.readLine();
-                if (name == null) {
-                    return;
-                }
-                if(name.toUpperCase().equals("QUIT")){
-                    quit = true;
-                }
-                synchronized (Server.getNames()) {
-                    if (!Server.getNames().contains(name)) {
-                        Server.getNames().add(name);
-                        this.setName(name);
-                        out.writeBytes("ACCEPTED \n");
-                        break;
-                    } else {
-                        out.writeBytes("INVALID \n");
-                        out.writeBytes("SELECTNAME \n");
-                    }
-                }
-
+        //Send hello message to ClientCommunication
+        out.writeBytes("SELECTNAME \n");
+        while (!quit) {
+            String name = in.readLine();
+            if (name == null) {
+                return;
             }
+            if (name.toUpperCase().equals("QUIT")) {
+                quit = true;
+            }
+            synchronized (Server.getNames()) {
+                if (!Server.getNames().contains(name)) {
+                    Server.getNames().add(name);
+                    this.setName(name);
+                    System.out.println(name);
+                    out.writeBytes("ACCEPTED \n");
+                    break;
+                } else {
+                    out.writeBytes("INVALID \n");
+                    out.writeBytes("SELECTNAME \n");
+                }
+            }
+
+        }
 
     }
 
@@ -79,6 +79,7 @@ public class Client extends Thread {
             if (input == null) {
                 return;
             }
+
             input = input.toUpperCase();
             Pattern userPattern = Pattern.compile("USERS: (.*)");
             Matcher userMatcher = userPattern.matcher(input);
@@ -97,7 +98,8 @@ public class Client extends Thread {
                 }
             } else if (input.equals("HELP")) {
                 out.writeBytes("ROOMS \n");
-                out.writeBytes("USERS: <ROOMNAME>");
+                out.writeBytes("USERS: <ROOMNAME> \n");
+                out.writeBytes("JOIN: <ROOMNAME> \n");
             } else if (joinRoomMatcher.find()) {
                 Room r = findRoomByName(joinRoomMatcher.group(1));
                 this.room = r;
@@ -106,9 +108,9 @@ public class Client extends Thread {
                 room.outputStreams.add(out);
                 room.sendClientJoinedNotification(this);
                 break;
-            } else if(input.equals("QUIT")){
+            } else if (input.equals("QUIT")) {
                 quit = true;
-            }else {
+            } else {
                 out.writeBytes("UNKNOWN_COMMAND \n");
             }
         }
@@ -121,13 +123,12 @@ public class Client extends Thread {
             if (input == null) {
                 return;
             }
-            input = input.toUpperCase();
 
             Pattern messagePattern = Pattern.compile("MESSAGE: (.*)");
-            Matcher messageMatcher = messagePattern.matcher(input);
+            Matcher messageMatcher = messagePattern.matcher(input.toUpperCase());
             if (messageMatcher.find()) {
                 Server.sendMessageToRoom(this, room, messageMatcher.group(1));
-            }else if(input.equals("QUIT")){
+            } else if (input.equals("QUIT")) {
                 quit = true;
             } else {
                 out.writeBytes("INVALID_MESSAGE_FORMAT \n");
@@ -162,5 +163,14 @@ public class Client extends Thread {
 
     public DataOutputStream getOut() {
         return out;
+    }
+
+    public String clientsToString(Room r) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("");
+        for (ClientCommunication c : Server.getUsersForRoom(r.getName())) {
+            sb.append(c.getName() + "\n");
+        }
+        return sb.toString();
     }
 }

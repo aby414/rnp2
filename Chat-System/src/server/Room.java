@@ -7,26 +7,27 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class Room extends Thread {
+public class Room {
 
+    String name;
     Server server;
-    List<Client> clients = new ArrayList<>();
+    List<ClientCommunication> clients = new ArrayList<>();
     Set<DataOutputStream> outputStreams = new HashSet<>();
 
     public Room(String name, Server server) {
-        super(name);
+        this.name = name;
         this.server = server;
     }
 
-    public List<Client> getClients() {
+    public List<ClientCommunication> getClients() {
         return clients;
     }
 
-    public void addClient(Client client) {
+    public void addClient(ClientCommunication client) {
         clients.add(client);
     }
 
-    public void sendMessage(Client client, String message) {
+    public void sendMessage(ClientCommunication client, String message) {
         try {
             for (DataOutputStream out : outputStreams) {
 
@@ -37,10 +38,10 @@ public class Room extends Thread {
         }
     }
 
-    public void sendClientGoneMessage(Client client){
+    public void sendClientGoneMessage(ClientCommunication client) {
         try {
             for (DataOutputStream out : outputStreams) {
-                if(!out.equals(client.getOut())) {
+                if (!out.equals(client.getOut())) {
                     out.writeBytes(client.getName() + " hat den Raum verlassen \n");
                 }
             }
@@ -49,10 +50,10 @@ public class Room extends Thread {
         }
     }
 
-    public void sendClientJoinedNotification(Client client){
+    public void sendClientJoinedNotification(ClientCommunication client) {
         try {
             for (DataOutputStream out : outputStreams) {
-                if(!out.equals(client.getOut())) {
+                if (!out.equals(client.getOut())) {
                     out.writeBytes(client.getName() + " hat den Raum betreten \n");
                 }
             }
@@ -64,7 +65,7 @@ public class Room extends Thread {
     public String clientsToString() {
         StringBuilder sb = new StringBuilder();
         sb.append("");
-        for (Client c : clients) {
+        for (ClientCommunication c : clients) {
             sb.append(c.getName() + "\n");
         }
         return sb.toString();
@@ -74,5 +75,7 @@ public class Room extends Thread {
         return outputStreams;
     }
 
-
+    public String getName() {
+        return name;
+    }
 }
