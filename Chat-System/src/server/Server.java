@@ -18,7 +18,6 @@ public class Server {
     private BufferedReader bufferedReader;
 
     private static HashSet<String> names = new HashSet<String>(Arrays.asList("TIMO"));
-    private static HashSet<Client> clients = new HashSet<>();
     private static List<Room> rooms = new ArrayList<>();
     private static HashSet<DataOutputStream> outputStreams = new HashSet<>();
 
@@ -57,7 +56,7 @@ public class Server {
         throw new IllegalArgumentException("The chatroom " + roomName +" does not exist!");
     }
 
-    public void sendMessage(String room){
+    public void sendMessageToRoom(String room){
 
     }
 
