@@ -35,14 +35,6 @@ public class Server {
         rooms.add(room);
     }
 
-    public static List<ClientCommunication> getUsersForRoom(String roomName) {
-        for (Room r : rooms) {
-            if (r.getName().equals(roomName)) {
-                return r.getClients();
-            }
-        }
-        throw new IllegalArgumentException("The chatroom " + roomName + " does not exist!");
-    }
 
     public static void sendMessageToRoom(ClientCommunication client, Room room, String message) {
         room.sendMessage(client, message);

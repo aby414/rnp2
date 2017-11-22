@@ -2,6 +2,8 @@ package server;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,18 +55,24 @@ public class ClientCommunication extends Thread {
             if (name.toUpperCase().equals("QUIT")) {
                 quit = true;
             }
-            synchronized (Server.getNames()) {
-                if (!Server.getNames().contains(name)) {
-                    Server.getNames().add(name);
-                    this.setName(name);
-                    System.out.println(name);
-                    out.println("-ACCEPTED");
-                    out.flush();
-                    break;
-                } else {
-                    out.println("INVALID");
-                    out.println("-SELECTNAME");
-                    out.flush();
+            if (name.equals("") || name.length() > 20 || name.startsWith(" ") || name.endsWith(" ")) {
+                out.println("INVALID");
+                out.println("-SELECTNAME");
+                out.flush();
+            } else {
+                synchronized (Server.getNames()) {
+                    if (!Server.getNames().contains(name)) {
+                        Server.getNames().add(name);
+                        this.setName(name);
+                        System.out.println(name);
+                        out.println("-ACCEPTED");
+                        out.flush();
+                        break;
+                    } else {
+                        out.println("INVALID");
+                        out.println("-SELECTNAME");
+                        out.flush();
+                    }
                 }
             }
 
@@ -150,9 +158,15 @@ public class ClientCommunication extends Thread {
     public String roomsToString() {
         StringBuilder sb = new StringBuilder();
         sb.append("");
-        for (Room r : Server.getRooms()) {
+        if (Server.getRooms().isEmpty()) {
+            return "-";
+        }
+        List<Room> roomsWithoutLast = new ArrayList<>(Server.getRooms());
+        roomsWithoutLast.remove(roomsWithoutLast.size() - 1);
+        for (Room r : roomsWithoutLast) {
             sb.append(r.getName() + "\n");
         }
+        sb.append("-" + Server.getRooms().get(roomsWithoutLast.size()).getName() + "\n");
         return sb.toString();
     }
 

@@ -12,8 +12,8 @@ public class ConnectionManager extends Thread {
     private Socket socket;
 
 
-    public ConnectionManager(Socket socket, Client client) {
-        this.socket = socket;
+    public ConnectionManager(Client client) {
+        this.socket = client.getSocket();
         this.client = client;
     }
 
@@ -21,7 +21,7 @@ public class ConnectionManager extends Thread {
         Scanner scanner = new Scanner(System.in);
         String input;
         while (true) {
-             input = scanner.nextLine();
+            input = scanner.nextLine();
             if (!input.toUpperCase().equals("QUIT") && !isInterrupted()) {
                 client.getOut().println(input);
                 client.getOut().flush();

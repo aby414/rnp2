@@ -10,8 +10,8 @@ public class Client implements Runnable {
 
     private static Socket socket;
     private Thread listener = null;
-    private  PrintWriter out;
-    private  BufferedReader br;
+    private PrintWriter out;
+    private BufferedReader br;
     private ConnectionManager cm;
 
     public Client(String hostname, String port) {
@@ -22,7 +22,7 @@ public class Client implements Runnable {
 
             listener = new Thread(this);
             listener.start();
-            cm = new ConnectionManager(socket,this);
+            cm = new ConnectionManager(this);
             cm.start();
 
         } catch (IOException e) {
@@ -42,7 +42,7 @@ public class Client implements Runnable {
 
     @Override
     public void run() {
-        while(!listener.isInterrupted()) {
+        while (!listener.isInterrupted()) {
             try {
                 while (true) {
                     String line = br.readLine();
@@ -52,7 +52,7 @@ public class Client implements Runnable {
                 out.close();
                 System.out.println("Connection lost to host.");
                 listener.interrupt();
-                if(cm.isInterrupted() == false){
+                if (cm.isInterrupted() == false) {
                     cm.interrupt();
                 }
                 System.out.println("closed client");
@@ -60,16 +60,20 @@ public class Client implements Runnable {
         }
     }
 
-    public  PrintWriter getOut() {
+    public PrintWriter getOut() {
         return out;
     }
 
-    public  BufferedReader getBr() {
+    public BufferedReader getBr() {
         return br;
     }
 
     public Thread getListener() {
         return listener;
+    }
+
+    public static Socket getSocket() {
+        return socket;
     }
 }
 
