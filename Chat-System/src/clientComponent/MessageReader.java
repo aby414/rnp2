@@ -1,20 +1,17 @@
-package client;
+package clientComponent;
 
-import javax.net.SocketFactory;
 import java.io.*;
 import java.net.Socket;
-import java.net.SocketException;
-import java.util.Scanner;
 
-public class Client implements Runnable {
+public class MessageReader implements Runnable {
 
     private static Socket socket;
     private Thread listener = null;
     private PrintWriter out;
     private BufferedReader br;
-    private ConnectionManager cm;
+    private MessageWriter cm;
 
-    public Client(String hostname, String port) {
+    public MessageReader(String hostname, String port) {
         try {
             socket = new Socket(hostname, Integer.parseInt(port));
             out = new PrintWriter(socket.getOutputStream());
@@ -22,7 +19,7 @@ public class Client implements Runnable {
 
             listener = new Thread(this);
             listener.start();
-            cm = new ConnectionManager(this);
+            cm = new MessageWriter(this);
             cm.start();
 
         } catch (IOException e) {
@@ -36,7 +33,7 @@ public class Client implements Runnable {
         String hostname = scanner.next();
         System.out.println("Portnummer:");
         String port = scanner.next();*/
-        Client c1 = new Client("localhost", "9001");
+        MessageReader c1 = new MessageReader("localhost", "9001");
 
     }
 
@@ -55,7 +52,7 @@ public class Client implements Runnable {
                 if (cm.isInterrupted() == false) {
                     cm.interrupt();
                 }
-                System.out.println("closed client");
+                System.out.println("closed clientComponent");
             }
         }
     }

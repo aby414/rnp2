@@ -1,4 +1,4 @@
-package server;
+package serverComponent;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -6,7 +6,7 @@ import java.util.*;
 
 public class Server {
 
-    private static final int PORT = 9001;
+    private static final int PORT = 9002;
 
 
     private static Set<String> names = new HashSet<String>(Arrays.asList("TIMO"));

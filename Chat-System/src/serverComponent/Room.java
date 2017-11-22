@@ -1,7 +1,5 @@
-package server;
+package serverComponent;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;

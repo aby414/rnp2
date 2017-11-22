@@ -1,20 +1,18 @@
-package client;
+package clientComponent;
 
-import javax.net.SocketFactory;
-import javax.xml.crypto.Data;
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class ConnectionManager extends Thread {
+public class MessageWriter extends Thread {
 
-    private Client client;
+    private MessageReader messageReader;
     private Socket socket;
 
 
-    public ConnectionManager(Client client) {
-        this.socket = client.getSocket();
-        this.client = client;
+    public MessageWriter(MessageReader messageReader) {
+        this.socket = messageReader.getSocket();
+        this.messageReader = messageReader;
     }
 
     public void run() {
@@ -23,8 +21,8 @@ public class ConnectionManager extends Thread {
         while (true) {
             input = scanner.nextLine();
             if (!input.toUpperCase().equals("QUIT") && !isInterrupted()) {
-                client.getOut().println(input);
-                client.getOut().flush();
+                messageReader.getOut().println(input);
+                messageReader.getOut().flush();
             } else {
                 break;
             }
@@ -32,10 +30,10 @@ public class ConnectionManager extends Thread {
 
         scanner.close();
 
-        client.getOut().close();
+        messageReader.getOut().close();
         try {
-            client.getBr().close();
-            client.getListener().interrupt();
+            messageReader.getBr().close();
+            messageReader.getListener().interrupt();
             socket.close();
             System.out.println("closed manager");
         } catch (IOException e) {
