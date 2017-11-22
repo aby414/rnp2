@@ -43,7 +43,7 @@ public class ClientCommunication extends Thread {
 
     private void registerUser() throws IOException {
         //Send hello message to ClientCommunication
-        out.println("SELECTNAME");
+        out.println("-SELECTNAME");
         out.flush();
         while (!quit) {
             String name = in.readLine();
@@ -58,12 +58,12 @@ public class ClientCommunication extends Thread {
                     Server.getNames().add(name);
                     this.setName(name);
                     System.out.println(name);
-                    out.println("ACCEPTED");
+                    out.println("-ACCEPTED");
                     out.flush();
                     break;
                 } else {
                     out.println("INVALID");
-                    out.println("SELECTNAME");
+                    out.println("-SELECTNAME");
                     out.flush();
                 }
             }
@@ -96,19 +96,19 @@ public class ClientCommunication extends Thread {
                     out.println(r.clientsToString());
                     out.flush();
                 } else {
-                    out.println("INVALID_ROOMNAME");
+                    out.println("-INVALID_ROOMNAME");
                     out.flush();
                 }
             } else if (input.equals("HELP")) {
                 out.println("ROOMS");
                 out.println("USERS: <ROOMNAME>");
-                out.println("JOIN: <ROOMNAME>");
+                out.println("-JOIN: <ROOMNAME>");
                 out.flush();
             } else if (joinRoomMatcher.find()) {
                 Room r = findRoomByName(joinRoomMatcher.group(1));
                 this.room = r;
                 r.addClient(this);
-                out.println("JOIN_SUCCESSFUL");
+                out.println("-JOIN_SUCCESSFUL");
                 out.flush();
                 room.outputStreams.add(out);
                 room.sendClientJoinedNotification(this);
@@ -116,7 +116,7 @@ public class ClientCommunication extends Thread {
             } else if (input.equals("QUIT")) {
                 quit = true;
             } else {
-                out.println("UNKNOWN_COMMAND");
+                out.println("-UNKNOWN_COMMAND");
                 out.flush();
             }
         }
@@ -137,13 +137,13 @@ public class ClientCommunication extends Thread {
             } else if (input.toUpperCase().equals("QUIT")) {
                 quit = true;
             } else {
-                out.println("INVALID_MESSAGE_FORMAT");
+                out.println("-INVALID_MESSAGE_FORMAT");
                 out.flush();
             }
 
 
         }
-        out.println("BYE BYE");
+        out.println("-BYE BYE");
         out.flush();
     }
 
