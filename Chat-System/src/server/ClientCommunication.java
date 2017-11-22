@@ -13,8 +13,6 @@ public class ClientCommunication extends Thread {
     private PrintWriter out;
     private boolean quit = false;
 
-    private int i = 0;
-
     public ClientCommunication(Socket socket) {
         this.socket = socket;
     }
@@ -118,8 +116,7 @@ public class ClientCommunication extends Thread {
             } else if (input.equals("QUIT")) {
                 quit = true;
             } else {
-                out.println("UNKNOWN_COMMAND" + i);
-                i++;
+                out.println("UNKNOWN_COMMAND");
                 out.flush();
             }
         }
