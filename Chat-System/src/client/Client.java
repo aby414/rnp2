@@ -3,15 +3,16 @@ package client;
 import javax.net.SocketFactory;
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Scanner;
 
 public class Client implements Runnable {
 
-    // private SocketFactory socketFactory = SocketFactory.getDefault();
     private static Socket socket;
     private Thread listener = null;
-    private static PrintWriter out;
-    private static BufferedReader br;
+    private  PrintWriter out;
+    private  BufferedReader br;
+    private ConnectionManager cm;
 
     public Client(String hostname, String port) {
         try {
@@ -21,7 +22,7 @@ public class Client implements Runnable {
 
             listener = new Thread(this);
             listener.start();
-            ConnectionManager cm = new ConnectionManager(socket,out);
+            cm = new ConnectionManager(socket,this);
             cm.start();
 
         } catch (IOException e) {
@@ -41,23 +42,34 @@ public class Client implements Runnable {
 
     @Override
     public void run() {
-        try {
-            while (true) {
-                String line = br.readLine();
-                System.out.println(line);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            listener = null;
+        while(!listener.isInterrupted()) {
             try {
-                out.close();
-                br.close();
-                socket.close();
+                while (true) {
+                    String line = br.readLine();
+                    System.out.println(line);
+                }
             } catch (IOException e) {
-                e.printStackTrace();
+                out.close();
+                System.out.println("Connection lost to host.");
+                listener.interrupt();
+                if(cm.isInterrupted() == false){
+                    cm.interrupt();
+                }
+                System.out.println("closed client");
             }
         }
+    }
+
+    public  PrintWriter getOut() {
+        return out;
+    }
+
+    public  BufferedReader getBr() {
+        return br;
+    }
+
+    public Thread getListener() {
+        return listener;
     }
 }
 
