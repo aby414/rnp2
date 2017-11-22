@@ -10,22 +10,19 @@ public class Client implements Runnable {
     // private SocketFactory socketFactory = SocketFactory.getDefault();
     private static Socket socket;
     private Thread listener = null;
-    private static DataOutputStream out;
+    private static PrintWriter out;
     private static BufferedReader br;
 
     public Client(String hostname, String port) {
         try {
             socket = new Socket(hostname, Integer.parseInt(port));
-            out = new DataOutputStream(socket.getOutputStream());
+            out = new PrintWriter(socket.getOutputStream());
             br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
             listener = new Thread(this);
             listener.start();
             ConnectionManager cm = new ConnectionManager(socket,out);
             cm.start();
-            /*ConnectionManager cm = new ConnectionManager(socket);
-            cm.start();*/
-
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -46,7 +43,6 @@ public class Client implements Runnable {
     public void run() {
         try {
             while (true) {
-
                 String line = br.readLine();
                 System.out.println(line);
             }

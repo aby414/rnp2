@@ -9,29 +9,21 @@ import java.util.Scanner;
 public class ConnectionManager extends Thread {
 
     private Socket socket;
-    private static DataOutputStream out;
+    private static PrintWriter out;
 
 
-    public ConnectionManager(Socket socket, DataOutputStream out) {
+    public ConnectionManager(Socket socket, PrintWriter out) {
         this.socket = socket;
         this.out = out;
     }
 
     public void run() {
         Scanner scanner = new Scanner(System.in);
-        try {
-            while (true) {
-                out.writeBytes(scanner.next());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                out.close();
-                socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        while (true) {
+            String input = scanner.nextLine();
+            out.println(input);
+            out.flush();
         }
+
     }
 }

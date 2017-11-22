@@ -1,9 +1,6 @@
 package server;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.Socket;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,8 +10,10 @@ public class ClientCommunication extends Thread {
     private Room room;
     private Socket socket;
     private BufferedReader in;
-    private DataOutputStream out;
+    private PrintWriter out;
     private boolean quit = false;
+
+    private int i = 0;
 
     public ClientCommunication(Socket socket) {
         this.socket = socket;
@@ -24,7 +23,7 @@ public class ClientCommunication extends Thread {
         try {
             // Create character streams for the socket.
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out = new DataOutputStream(socket.getOutputStream());
+            out = new PrintWriter(socket.getOutputStream());
 
             registerUser();
             chooseLobbyCommands();
@@ -46,7 +45,8 @@ public class ClientCommunication extends Thread {
 
     private void registerUser() throws IOException {
         //Send hello message to ClientCommunication
-        out.writeBytes("SELECTNAME \n");
+        out.println("SELECTNAME");
+        out.flush();
         while (!quit) {
             String name = in.readLine();
             if (name == null) {
@@ -60,11 +60,13 @@ public class ClientCommunication extends Thread {
                     Server.getNames().add(name);
                     this.setName(name);
                     System.out.println(name);
-                    out.writeBytes("ACCEPTED \n");
+                    out.println("ACCEPTED");
+                    out.flush();
                     break;
                 } else {
-                    out.writeBytes("INVALID \n");
-                    out.writeBytes("SELECTNAME \n");
+                    out.println("INVALID");
+                    out.println("SELECTNAME");
+                    out.flush();
                 }
             }
 
@@ -88,30 +90,37 @@ public class ClientCommunication extends Thread {
             Matcher joinRoomMatcher = joinRoomPattern.matcher(input);
 
             if (input.equals("ROOMS")) {
-                out.writeBytes(roomsToString());
+                out.print(roomsToString());
+                out.flush();
             } else if (userMatcher.find()) {
                 Room r = findRoomByName(userMatcher.group(1));
                 if (r != null) {
-                    out.writeBytes(r.clientsToString() + " \n");
+                    out.println(r.clientsToString());
+                    out.flush();
                 } else {
-                    out.writeBytes("INVALID_ROOMNAME \n");
+                    out.println("INVALID_ROOMNAME");
+                    out.flush();
                 }
             } else if (input.equals("HELP")) {
-                out.writeBytes("ROOMS \n");
-                out.writeBytes("USERS: <ROOMNAME> \n");
-                out.writeBytes("JOIN: <ROOMNAME> \n");
+                out.println("ROOMS");
+                out.println("USERS: <ROOMNAME>");
+                out.println("JOIN: <ROOMNAME>");
+                out.flush();
             } else if (joinRoomMatcher.find()) {
                 Room r = findRoomByName(joinRoomMatcher.group(1));
                 this.room = r;
                 r.addClient(this);
-                out.writeBytes("JOIN_SUCCESSFUL \n");
+                out.println("JOIN_SUCCESSFUL");
+                out.flush();
                 room.outputStreams.add(out);
                 room.sendClientJoinedNotification(this);
                 break;
             } else if (input.equals("QUIT")) {
                 quit = true;
             } else {
-                out.writeBytes("UNKNOWN_COMMAND \n");
+                out.println("UNKNOWN_COMMAND" + i);
+                i++;
+                out.flush();
             }
         }
     }
@@ -125,18 +134,20 @@ public class ClientCommunication extends Thread {
             }
 
             Pattern messagePattern = Pattern.compile("MESSAGE: (.*)");
-            Matcher messageMatcher = messagePattern.matcher(input.toUpperCase());
+            Matcher messageMatcher = messagePattern.matcher(input);
             if (messageMatcher.find()) {
                 Server.sendMessageToRoom(this, room, messageMatcher.group(1));
-            } else if (input.equals("QUIT")) {
+            } else if (input.toUpperCase().equals("QUIT")) {
                 quit = true;
             } else {
-                out.writeBytes("INVALID_MESSAGE_FORMAT \n");
+                out.println("INVALID_MESSAGE_FORMAT");
+                out.flush();
             }
 
 
         }
-        out.writeBytes("BYE BYE \n");
+        out.println("BYE BYE");
+        out.flush();
     }
 
     public String roomsToString() {
@@ -161,16 +172,7 @@ public class ClientCommunication extends Thread {
         return room;
     }
 
-    public DataOutputStream getOut() {
+    public PrintWriter getOut() {
         return out;
-    }
-
-    public String clientsToString(Room r) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("");
-        for (ClientCommunication c : Server.getUsersForRoom(r.getName())) {
-            sb.append(c.getName() + "\n");
-        }
-        return sb.toString();
     }
 }

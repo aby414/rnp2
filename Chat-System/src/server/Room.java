@@ -2,6 +2,7 @@ package server;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -12,7 +13,7 @@ public class Room {
     String name;
     Server server;
     List<ClientCommunication> clients = new ArrayList<>();
-    Set<DataOutputStream> outputStreams = new HashSet<>();
+    Set<PrintWriter> outputStreams = new HashSet<>();
 
     public Room(String name, Server server) {
         this.name = name;
@@ -28,38 +29,30 @@ public class Room {
     }
 
     public void sendMessage(ClientCommunication client, String message) {
-        try {
-            for (DataOutputStream out : outputStreams) {
+            for (PrintWriter out : outputStreams) {
 
-                out.writeBytes(client.getName() + ": " + message + "\n");
+                out.println(client.getName() + ": " + message);
+                out.flush();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public void sendClientGoneMessage(ClientCommunication client) {
-        try {
-            for (DataOutputStream out : outputStreams) {
+            for (PrintWriter out : outputStreams) {
                 if (!out.equals(client.getOut())) {
-                    out.writeBytes(client.getName() + " hat den Raum verlassen \n");
+                    out.println(client.getName() + " hat den Raum verlassen");
+                    out.flush();
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public void sendClientJoinedNotification(ClientCommunication client) {
-        try {
-            for (DataOutputStream out : outputStreams) {
+            for (PrintWriter out : outputStreams) {
                 if (!out.equals(client.getOut())) {
-                    out.writeBytes(client.getName() + " hat den Raum betreten \n");
+                    out.println(client.getName() + " hat den Raum betreten");
+                    out.flush();
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
     }
 
     public String clientsToString() {
@@ -71,7 +64,7 @@ public class Room {
         return sb.toString();
     }
 
-    public Set<DataOutputStream> getOutputStreams() {
+    public Set<PrintWriter> getOutputStreams() {
         return outputStreams;
     }
 
